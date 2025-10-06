@@ -170,8 +170,8 @@ namespace SFAgent.Services
 
                 // NCLOB -> NVARCHAR via CTE (evita GROUP BY em LOB)
                 var sql = @"
-                    CALL SP_PEDIDOS_SF();
-                ";
+                            CALL SP_PEDIDOS_SF();
+                          ";
 
                 var rows = sap.ExecuteQuery(sql);
 
@@ -243,6 +243,8 @@ namespace SFAgent.Services
 
                         // ----- Agregados -----
                         var subTotal = M2(r["SubTotal"]);
+
+                        var Pricebook2Id = S(r["Pricebook2Id"]);
                         var qtdItens = I(r["QtdItens"]);
 
                         // ----- Lookups por ExternalId -----
@@ -260,7 +262,7 @@ namespace SFAgent.Services
                         var tipoFrete = MapTipoFrete(tipoFreteRaw);
                         var transferencia = Yes(r["Transfered"]);
 
-                        // ----- Body -----
+                        // ----- Body (anonymous object) -----
                         var body = new
                         {
                             // Identificação exibida
@@ -294,15 +296,15 @@ namespace SFAgent.Services
                             // Dados fiscais/comerciais
                             CA_CPFCNPJ__c = cnpjCpf,
                             CA_Filial__r = filialLookup,
-                            //(Comentado Devido a falta de IdExterno)CA_Deposito__r = depositoLookup,
+                            // (Comentado Devido a falta de IdExterno) CA_Deposito__r = depositoLookup,
                             CA_UsoPrincipal2__r = usoPrincipal2Lookup,
                             CA_CondicaodePagamento__r = condPagLookup,
-                            //(Comentado Devido a falta de IdExterno)CA_FormaPagamento__r = formaPagLookup,
+                            // (Comentado Devido a falta de IdExterno) CA_FormaPagamento__r = formaPagLookup,
                             CA_TipoFrete__c = tipoFrete,
-                            //(Comentado Devido a falta de IdExterno)CA_Rota__r = rotaLookup,
+                            // (Comentado Devido a falta de IdExterno) CA_Rota__r = rotaLookup,
                             CA_Transportadora__r = transportadoraLookup,
                             CA_ConsumidorFinal__c = indFinal,
-                            //(Comentado Devido a falta de IdExterno)CA_PnTriangular__r = pnTriLookup,
+                            // (Comentado Devido a falta de IdExterno) CA_PnTriangular__r = pnTriLookup,
 
                             // Datas
                             EffectiveDate = dtPedido,
@@ -315,7 +317,6 @@ namespace SFAgent.Services
                             Status = statusSf,
 
                             // Totais
-                            //TotalAmount = totalAmount,
                             CA_Subtotal__c = subTotal,
                             CA_QtdItens__c = qtdItens,
                             CA_TotalGeral__c = totalAmount,
@@ -325,7 +326,10 @@ namespace SFAgent.Services
                             CA_LimiteDisponivel__c = (decimal?)null,
                             CA_StatusIntegracao__c = "Integrado",
                             CA_RetornoIntegracao__c = "",
-                            CA_AtualizacaoERP__c = DateTime.UtcNow.ToString("s") + "Z"
+                            CA_AtualizacaoERP__c = DateTime.UtcNow.ToString("s") + "Z",
+
+                            // Pricebook2 fixed Id.
+                            Pricebook2Id = Pricebook2Id
                         };
 
                         // Upsert por ExternalId (apenas na URL)
